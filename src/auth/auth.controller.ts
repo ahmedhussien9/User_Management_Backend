@@ -9,11 +9,11 @@ export class AuthController {
     @UseGuards(LocalAuthGuard)
     @Post('login')
     async login(@Request() req) {
-        const token = await this.authService.login(req.user);
+        const payload = await this.authService.login(req.user);
         return {
             status: 'success',
             message: 'Login successful',
-            data: token,
+            data: payload,
         };
     }
 }
