@@ -2,12 +2,23 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/user-management'),
+    ConfigModule.forRoot({
+      isGlobal: true, // Makes the ConfigModule available globally
+      envFilePath: '.env', // Specify the path to your .env file (default is '.env')
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URL'),
+      }),
+    }),
     AuthModule,
     UserModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

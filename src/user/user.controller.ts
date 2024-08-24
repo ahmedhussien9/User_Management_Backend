@@ -55,7 +55,8 @@ export class UserController {
         };
     }
 
-    @Roles(Role.Admin, Role.Manager)
+    
+    @Roles(Role.Admin, Role.Manager, Role.Editor)
     @Get()
     async findAll(
         @Query('page') page: string = '1',
@@ -63,11 +64,18 @@ export class UserController {
     ) {
         const pageNumber = parseInt(page, 10);
         const pageSizeNumber = parseInt(pageSize, 10);
-        const result = await this.userService.findAllUsers(pageNumber, pageSizeNumber);
+
+        // Get users with pagination
+        const { data: users, total } = await this.userService.findAllUsers(pageNumber, pageSizeNumber);
+
+        // Return the response with the necessary details
         return {
             status: 'success',
             message: 'Users retrieved successfully',
-            data: result,
+            data: users,
+            total, // Include the total number of users for pagination
+            currentPage: pageNumber,
+            pageSize: pageSizeNumber,
         };
     }
 }

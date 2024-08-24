@@ -14,7 +14,6 @@ export class UserService {
     ) { }
 
     async createUser(createUserDto: CreateUserDto): Promise<User> {
-        console.log(createUserDto)
         if (!createUserDto.email || !createUserDto.password) {
             throw new BadRequestException(ERROR_MESSAGES.EMAIL_AND_PASSWORD_REQUIRED);
         }
@@ -25,6 +24,7 @@ export class UserService {
         }
 
         const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
         const user = new this.userModel({
             ...createUserDto,
             password: hashedPassword,
@@ -76,20 +76,20 @@ export class UserService {
         return user;
     }
 
-    async findAllUsers(page: number, pageSize: number): Promise<{ users: User[], total: number, pageSize: number, currentPage: number }> {
-        const skip = (page - 1) * pageSize;
-        const users = await this.userModel.find().skip(skip).limit(pageSize).exec();
-        const total = await this.userModel.countDocuments().exec();
+    async findAllUsers(page: number, pageSize: number): Promise<{ data: User[], total: number }> {
+        // Count total users for pagination
+        const total = await this.userModel.countDocuments();
 
-        if (!users || users.length === 0) {
-            throw new NotFoundException('No users found');
-        }
+        // Fetch users with pagination, excluding the password field
+        const users = await this.userModel
+            .find({}, { password: 0 }) // Exclude the password field
+            .skip((page - 1) * pageSize)
+            .limit(pageSize)
+            .exec();
 
         return {
-            users,
+            data: users,
             total,
-            pageSize,
-            currentPage: page
         };
     }
 
